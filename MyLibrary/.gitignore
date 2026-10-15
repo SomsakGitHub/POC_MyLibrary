@@ -1,8 +1,12 @@
 .DS_Store
 /.build
+/.jfrog.env
+/.github.env
 /Packages
 xcuserdata/
 DerivedData/
 .swiftpm/configuration/registries.json
 .swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
 .netrc
+
+/Distribution/output/

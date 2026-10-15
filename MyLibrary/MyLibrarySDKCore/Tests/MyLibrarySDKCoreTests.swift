@@ -1,5 +1,5 @@
 import XCTest
-@testable import MyLibrarySDKCore
+@testable import MyLibrarySDKCoreBinary
 
 @MainActor
 final class MyLibrarySDKCoreTests: XCTestCase {

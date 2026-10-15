@@ -8,22 +8,22 @@ let package = Package(
         .iOS(.v15),
     ],
     products: [
-        .library(name: "MyLibrarySDKCore", targets: ["MyLibrarySDKCore"]),
-        .library(name: "MyLibrarySDKFeature", targets: ["MyLibrarySDKFeature"]),
+        .library(name: "MyLibrarySDKCore", targets: ["MyLibrarySDKCoreBinary"]),
+        .library(name: "MyLibrarySDKFeature", targets: ["MyLibrarySDKFeatureBinary"]),
     ],
     targets: [
         .target(
-            name: "MyLibrarySDKCore",
+            name: "MyLibrarySDKCoreBinary",
             path: "MyLibrarySDKCore/Sources"
         ),
         .target(
-            name: "MyLibrarySDKFeature",
-            dependencies: ["MyLibrarySDKCore"],
+            name: "MyLibrarySDKFeatureBinary",
+            dependencies: ["MyLibrarySDKCoreBinary"],
             path: "MyLibrarySDKFeature/Sources"
         ),
         .testTarget(
             name: "MyLibrarySDKCoreTests",
-            dependencies: ["MyLibrarySDKCore"],
+            dependencies: ["MyLibrarySDKCoreBinary"],
             path: "MyLibrarySDKCore/Tests"
         ),
     ]

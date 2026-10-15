@@ -1,5 +1,5 @@
 import UIKit
-import MyLibrarySDKCore
+import MyLibrarySDKCoreBinary
 
 final class MyLibraryViewController: UIViewController {
     private let data: MyLibraryFlowData

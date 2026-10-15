@@ -1,5 +1,5 @@
 import UIKit
-import MyLibrarySDKCore
+import MyLibrarySDKCoreBinary
 
 @MainActor
 public enum MyLibrarySDKFeature {

@@ -1,43 +1,76 @@
 # MyLibrary
 
-MyLibrary is an iOS SDK distributed as a Swift Package. It currently provides two products:
+MyLibrary is an iOS SDK distributed to consuming apps as binary Swift Package Manager products. The source package in this repository is for the SDK build and release pipeline; the package consumers depend on is a binary-only manifest hosted on a dedicated `release` branch whose tags point at XCFramework archives uploaded to GitHub Releases.
 
-- `MyLibrarySDKCore`: SDK configuration and shared types.
-- `MyLibrarySDKFeature`: the UIKit flow. It depends on `MyLibrarySDKCore`.
+## Products
 
-## Requirements
+| SPM product | Swift module imported by the app | Purpose |
+| --- | --- | --- |
+| `MyLibrarySDKCore` | `MyLibrarySDKCoreBinary` | SDK configuration and shared types |
+| `MyLibrarySDKFeature` | `MyLibrarySDKFeatureBinary` | UIKit flow; links the Core binary |
 
-- iOS 15.0 or later
-- Swift Package Manager
-- Xcode with Swift 5.9 or later
+The binary module names end in `Binary` because the public API types already use the product names. This avoids Swift module/type name collisions while keeping the product names shown in Xcode unchanged.
 
-## Add the package
+## Build and publish a release
 
-In Xcode, choose **File > Add Package Dependencies…**, enter this repository's Git URL, and select a released version. Add both `MyLibrarySDKCore` and `MyLibrarySDKFeature` to the app target.
+The build host needs macOS, Xcode with the iOS and iOS Simulator SDKs, Swift 5.9 or later, Python 3, and an authenticated [GitHub CLI](https://cli.github.com) (`gh auth login`). The publishing identity needs write access to the repository and permission to create releases.
 
-Alternatively, declare the package in `Package.swift`:
+Release settings are read from `.github.env` and can be overridden by environment variables:
 
-```swift
-.package(url: "https://github.com/<owner>/MyLibrary.git", from: "1.0.0")
+- `GITHUB_REPO`: repository in `owner/repo` form. Defaults to the `origin` remote.
+- `RELEASE_BRANCH`: branch that holds the binary manifest (default `release`).
+- `TAG_PREFIX`: version tag prefix (default `v`).
+
+For a local release, copy `.github.env.example` to `.github.env`, fill in the values, and restrict its permissions:
+
+```sh
+cp .github.env.example .github.env
+chmod 600 .github.env
 ```
 
-Then add the products to the app target:
+Build XCFrameworks and checksums locally:
 
-```swift
-.product(name: "MyLibrarySDKCore", package: "MyLibrary"),
-.product(name: "MyLibrarySDKFeature", package: "MyLibrary"),
+```sh
+./scripts/build-binary-release.sh 1.0.0
 ```
 
-Replace `<owner>` with the Git hosting account or organization that owns this repository.
+Publish the binary archives to GitHub Releases and the binary-only package to the `release` branch:
 
-## Configure and start the flow
+```sh
+./scripts/publish-binary-release.sh 1.0.0
+```
 
-Initialize the core once during app startup, then start the feature from a view controller:
+The script renders `Distribution/Package.swift.template` with the release asset URLs and checksums, commits that manifest to the `release` branch, tags the commit, pushes both, and uploads the ZIPs to a GitHub Release. The release is versioned and immutable: publish a new version for each change and never republish an existing tag. The XCFrameworks cover iOS devices (`arm64`) and simulators (`arm64` and `x86_64`) with iOS 15 as the deployment target. `Distribution/output/` is generated and ignored by Git.
+
+## Add the binary package to an app
+
+Add the package using the repository URL and a semantic version. The tag resolved by SwiftPM points at the binary-only manifest on the `release` branch.
+
+In a `Package.swift` manifest:
+
+```swift
+.package(url: "https://github.com/<OWNER>/<REPO>.git", from: "1.0.0")
+
+.product(name: "MyLibrarySDKCore", package: "POC_MyLibrary"),
+.product(name: "MyLibrarySDKFeature", package: "POC_MyLibrary"),
+```
+
+In Xcode, use **File > Add Package Dependencies**, paste the repository URL, choose the version, and select the `MyLibrarySDKCore` and/or `MyLibrarySDKFeature` products.
+
+For a private repository, SwiftPM must authenticate to clone the repo and download the release assets. Provide a token through `~/.netrc` on the consumer machine:
+
+```text
+machine github.com login <GITHUB_USER> password <GITHUB_TOKEN>
+```
+
+`<GITHUB_TOKEN>` is a personal access token with read access to the repository (classic tokens need the `repo` scope; fine-grained tokens need repository contents read). Protect the file with `chmod 600 ~/.netrc`. Release asset downloads are served from `github.com`, so the same `netrc` entry covers them.
+
+The app imports the binary modules while retaining the current SDK API:
 
 ```swift
 import UIKit
-import MyLibrarySDKCore
-import MyLibrarySDKFeature
+import MyLibrarySDKCoreBinary
+import MyLibrarySDKFeatureBinary
 
 @MainActor
 func configureMyLibrary() {
@@ -58,35 +91,17 @@ func openMyLibrary(from viewController: UIViewController) {
             appCode: "MYAPP",
             productCode: "SAVINGS"
         ),
-        from: viewController,
-        onClose: { result in
-            print("MyLibrary closed: \(result ?? "no result")")
-        }
+        from: viewController
     )
 }
 ```
 
-`startFlow` must run on the main actor and requires `MyLibrarySDKCore.initialize(app:)` to have been called first. If `from` is omitted, the SDK attempts to find the topmost view controller in the key window. Supplying the presenting view controller is recommended when the host app controls its navigation.
+`startFlow` runs on the main actor and requires `MyLibrarySDKCore.initialize(app:)` first. Passing the presenting view controller is recommended.
 
-## Products and targets
+## Source development
 
-| Product | Use |
-| --- | --- |
-| `MyLibrarySDKCore` | Configure the SDK and access `MyLibraryAppConfig` / `MyLibraryEnvironment`. |
-| `MyLibrarySDKFeature` | Present the UIKit flow; this product depends on `MyLibrarySDKCore`. |
-
-The package currently supports iOS 15 and later and has no external package dependencies.
-
-## Release a version
-
-1. Commit the package source and this README to the Git repository.
-2. In Xcode's package editor, confirm the repository resolves and the two products are available to a sample host app.
-3. Choose a semantic version, for example `1.0.0`, and create an annotated Git tag with that exact version (`1.0.0`, without a `v` prefix).
-4. Push the commit and tag to the repository.
-5. Share the repository URL and version with consumers. They can select the version in Xcode or use the version requirement shown above.
-
-Keep released tags immutable. Publish a new tag for each release so clients can resolve a reproducible version.
+The root `Package.swift` builds the source targets for SDK development. Do not publish that source package to consumers. The release script renders `Distribution/Package.swift.template` with the versioned release asset URLs and checksums, then commits that manifest to the `release` branch and tags it. The public binaries are downloaded and checksum-verified by SwiftPM.
 
 ## License
 
-A license has not been selected for this package yet. Add the approved license file before distributing it to third parties; the repository owner should confirm the license terms.
+A license has not been selected for this package yet. Add the approved license file before distributing it to third parties.

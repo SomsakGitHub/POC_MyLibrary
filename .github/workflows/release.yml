@@ -1,0 +1,27 @@
+name: Publish binary release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Semantic version to publish, for example 1.0.0"
+        required: true
+        type: string
+
+jobs:
+  publish:
+    runs-on: macos-14
+    permissions:
+      contents: write
+    env:
+      GITHUB_REPO: ${{ github.repository }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Publish binary release
+        working-directory: MyLibrary
+        run: ./scripts/publish-binary-release.sh "${{ inputs.version }}"
