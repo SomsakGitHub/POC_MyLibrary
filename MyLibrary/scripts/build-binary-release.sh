@@ -50,6 +50,8 @@ make_framework() {
 <key>CFBundleIdentifier</key><string>com.mylibrary.$name</string>
 <key>CFBundleName</key><string>$name</string>
 <key>CFBundlePackageType</key><string>FMWK</string>
+<key>CFBundleShortVersionString</key><string>$VERSION</string>
+<key>CFBundleVersion</key><string>$VERSION</string>
 <key>MinimumOSVersion</key><string>$IOS_MIN</string>
 <key>DTPlatformName</key><string>$platform</string>
 </dict></plist>
