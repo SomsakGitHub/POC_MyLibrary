@@ -10,7 +10,7 @@ let package = Package(
         .library(name: "MyLibrarySDKFeature", targets: ["MyLibrarySDKFeatureBinary", "MyLibrarySDKCoreBinary"]),
     ],
     targets: [
-        .binaryTarget(name: "MyLibrarySDKCoreBinary", url: "https://github.com/SomsakGitHub/POC_MyLibrary/releases/download/v0.1.0/MyLibrarySDKCoreBinary-0.1.0.zip", checksum: "5b19e53701441dba4c622b99dfad9807983ad851a1fd5a252167afd02644d9d2"),
-        .binaryTarget(name: "MyLibrarySDKFeatureBinary", url: "https://github.com/SomsakGitHub/POC_MyLibrary/releases/download/v0.1.0/MyLibrarySDKFeatureBinary-0.1.0.zip", checksum: "dde19f60a1a683f299ebed5a7a2c0d8b5e117ce74d901f0b022d8b48cac7e5a0"),
+        .binaryTarget(name: "MyLibrarySDKCoreBinary", url: "https://github.com/SomsakGitHub/POC_MyLibrary/releases/download/v0.1.1/MyLibrarySDKCoreBinary-0.1.1.zip", checksum: "43266e81564f954867524d0512c96f7f622d3827d4c4ba0f74c1378038f6afa1"),
+        .binaryTarget(name: "MyLibrarySDKFeatureBinary", url: "https://github.com/SomsakGitHub/POC_MyLibrary/releases/download/v0.1.1/MyLibrarySDKFeatureBinary-0.1.1.zip", checksum: "9835ef7b43384b76199c4a831d57a246203ae953637d0c2d2d802aa9d9e743b8"),
     ]
 )
